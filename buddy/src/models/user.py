@@ -1,6 +1,5 @@
-from __future__ import annotations
 from enum import Enum
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field
 
 class UserRoles(Enum):
     user = "user"
