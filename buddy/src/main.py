@@ -44,8 +44,15 @@ def index() -> str:
 
 @app.get("/protected", status_code=200)
 def access_protected_route(user: User=Depends(dependencies.get_user_or_admin)) -> str:
-    return "Successfully accessed user resource"
+    return f"Successfully accessed user resource. User ID: {user.id}"
 
 @app.get("/adminonly", status_code=200)
 def access_admin_only_route(admin: User=Depends(dependencies.get_admin)) -> str:
-    return "Successfully accessed admin resource"
+    return f"Successfully accessed admin resource. User ID: {admin.id}"
+
+
+
+
+
+
+
