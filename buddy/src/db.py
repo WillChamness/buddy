@@ -5,7 +5,7 @@ from sqlmodel.pool import StaticPool
 from buddy.src.models import User, UserRoles
 from buddy.src.security import PasswordSecurity
 
-def start_sqlite_session() -> Callable[[], Generator[None, None, Session]]:
+def start_sqlite_session() -> Callable[[], Generator[Session, None, None]]:
     DB_URI: str|None = os.getenv("DB_URI")
     if DB_URI is None:
         raise RuntimeError("DB_URI is not an environment variable")
@@ -13,14 +13,14 @@ def start_sqlite_session() -> Callable[[], Generator[None, None, Session]]:
     engine = create_engine(DB_URI, connect_args={"check_same_thread": False})
     SQLModel.metadata.create_all(engine)
 
-    def get_session() -> Generator[None, None, Session]:
+    def get_session() -> Generator[Session, None, None]:
         with Session(engine) as session:
             yield session 
 
     return get_session
 
 
-def start_inmemory_session() -> Callable[[], Generator[None, None, Session]]:
+def start_inmemory_session() -> Callable[[], Generator[Session, None, None]]:
     db_uri = "sqlite://"
 
     engine = create_engine(db_uri, connect_args={"check_same_thread": False}, poolclass=StaticPool)
@@ -34,7 +34,7 @@ def start_inmemory_session() -> Callable[[], Generator[None, None, Session]]:
         session.add(User(username="inactiveuser", password=PasswordSecurity.hash("password"), role=UserRoles.inactive))
         session.commit()
 
-    def get_session() -> Generator[None, None, Session]:
+    def get_session() -> Generator[Session, None, None]:
         with Session(engine) as session:
             yield session
 

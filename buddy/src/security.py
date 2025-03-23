@@ -1,11 +1,9 @@
 import os
 import secrets
-from fastapi import HTTPException, status, Depends
-from typing import Callable, TypeVar, Generic
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt, JWTError
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select, func, col
 from datetime import datetime, timedelta, timezone
 from buddy.src.models import User, UserRoles, RefreshToken, convert_expiry_to_utc
 
@@ -45,7 +43,7 @@ class PasswordSecurity:
         hashed_password = cls.hash(password)
 
         new_user: User
-        if db.exec(select(func.count(User.id))).one() == 0:
+        if db.exec(select(func.count(col(User.id)))).one() == 0:
             new_user = User(username=username, password=hashed_password, role=UserRoles.admin)
         else:
             new_user = User(username=username, password=hashed_password, role=UserRoles.user)
@@ -100,6 +98,7 @@ class IdentitySecurity:
         Returns:
             RefreshToken: The newly created refresh token
         """
+        assert user.id is not None
         token = RefreshToken(token=secrets.token_hex(32), user_id=user.id)
         db.add(token)
         db.commit()
@@ -169,6 +168,7 @@ class IdentitySecurity:
         if cls._jwt_secret_key is None:
             raise RuntimeError("Server does not have JWT secret key setting set")
 
+        assert user.id is not None
         encode = dict(cls._JwtData(sub=user.username, id=user.id, exp=datetime.now(tz=timezone.utc)+cls._expiry_delta))
         return jwt.encode(encode, cls._jwt_secret_key, algorithm=cls._algorithm)
 

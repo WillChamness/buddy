@@ -1,9 +1,7 @@
-from datetime import datetime, timezone, timedelta
 from buddy.src import dependencies
-from fastapi import APIRouter, HTTPException, status, Depends, Response, Cookie
-from fastapi.security import OAuth2PasswordRequestForm
-from buddy.src.models import User, UserRoles, RefreshToken, convert_expiry_to_utc
-from buddy.dtos import Signup, UserDto, AccessTokenDto
+from fastapi import APIRouter, HTTPException, status, Depends
+from buddy.src.models import User
+from buddy.dtos import UserDto
 from buddy.src.data import UserRepository
 from sqlmodel import Session
 
@@ -18,7 +16,8 @@ def get_user_by_id(user_id: int, db: Session=Depends(dependencies.session), _: U
     if searched_user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with ID '{user_id}' not found")
 
-    return UserDto(id=searched_user.id, username=searched_user.username, role=searched_user.role)
+    assert searched_user.id is not None
+    return UserDto(id=searched_user.id, username=searched_user.username, role=searched_user.role.value)
 
 @router.get("/username/{username}", status_code=status.HTTP_200_OK)
 def get_user_by_username(username: str, db: Session=Depends(dependencies.session), _: User=Depends(dependencies.get_admin)) -> UserDto:
@@ -26,11 +25,13 @@ def get_user_by_username(username: str, db: Session=Depends(dependencies.session
     if searched_user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with username '{username}' not found")
 
-    return UserDto(id=searched_user.id, username=searched_user.username, role=searched_user.role)
+    assert searched_user.id is not None
+    return UserDto(id=searched_user.id, username=searched_user.username, role=searched_user.role.value)
 
 @router.get("/me", status_code=status.HTTP_200_OK)
 def get_user_profile(user: User=Depends(dependencies.get_user_or_admin)) -> UserDto:
-    return UserDto(id=user.id, username=user.username, role=user.role)
+    assert user.id is not None
+    return UserDto(id=user.id, username=user.username, role=user.role.value)
 
 @router.delete("/delete/me", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(db: Session=Depends(dependencies.session), user: User=Depends(dependencies.get_user_or_admin)) -> None:

@@ -1,5 +1,7 @@
 from enum import Enum
-from sqlmodel import SQLModel, Field
+
+from sqlmodel import Field, SQLModel
+
 
 class UserRoles(Enum):
     user = "user"
@@ -7,10 +9,8 @@ class UserRoles(Enum):
     inactive = "inactive"
 
 
-class User(SQLModel, table=True): # type: ignore[call-arg]
-    id: int|None = Field(primary_key=True, default=None)
+class User(SQLModel, table=True):  # type: ignore[call-arg]
+    id: int | None = Field(primary_key=True, default=None)
     username: str
     password: str
     role: UserRoles
-
-

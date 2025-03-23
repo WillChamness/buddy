@@ -1,18 +1,24 @@
-import sqlalchemy as sa
-from sqlmodel import SQLModel, Field
 from datetime import datetime, timedelta, timezone
-from buddy.src.models.user import User
+
+import sqlalchemy as sa
+from sqlmodel import Field, SQLModel
+
 
 class _RefreshTokenSettings:
     expiry_delta = timedelta(days=1)
+
 
 def _create_timestamp() -> datetime:
     current_time = datetime.now(tz=timezone.utc)
     return current_time + _RefreshTokenSettings.expiry_delta
 
-class RefreshToken(SQLModel, table=True): # type: ignore[call-arg]
+
+class RefreshToken(SQLModel, table=True):  # type: ignore[call-arg]
     token: str = Field(primary_key=True)
-    expiry: datetime = Field(sa_column=sa.Column(sa.DateTime(timezone=True), nullable=False), default_factory=_create_timestamp)
+    expiry: datetime = Field(
+        sa_column=sa.Column(sa.DateTime(timezone=True), nullable=False),
+        default_factory=_create_timestamp,
+    )
     user_id: int = Field(foreign_key="user.id")
 
 
