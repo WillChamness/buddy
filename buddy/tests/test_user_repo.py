@@ -1,25 +1,11 @@
 import requests
 from requests import Response
 from pydantic import ValidationError
-from buddy.tests.http_test import HttpTestCase
+from buddy.tests.http_test import RepoTestCase 
 from buddy.tests._env import ServerSettings
 from buddy.dtos import AccessTokenDto, UserDto, Login, Signup
 
-class UserRepoTestCase(HttpTestCase):
-    admin_access: AccessTokenDto
-    access1: AccessTokenDto
-    access2: AccessTokenDto
-    access3: AccessTokenDto
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.admin_access, _ = cls.login(Login(username="admin", password="admin"))
-        cls.access1, _ = cls.login(Login(username="user1", password="password"))
-        cls.access2, _ = cls.login(Login(username="user2", password="password"))
-        cls.access3, _ = cls.login(Login(username="user3", password="password"))
-
-
-class TestGetUser(UserRepoTestCase):
+class TestGetUser(RepoTestCase):
     def test_get_me(self) -> None:
         responses: list[Response] = []
         for access_token in [self.admin_access, self.access1, self.access2, self.access3]:
@@ -79,7 +65,7 @@ class TestGetUser(UserRepoTestCase):
             pass
 
             
-class TestDeleteUser(UserRepoTestCase):
+class TestDeleteUser(RepoTestCase):
     def test_delete_me(self) -> None:
         self.signup(Signup(username="deleteme", password="deleteme"))
         access, _ = self.login(Login(username="deleteme", password="deleteme"))
@@ -123,7 +109,7 @@ class TestDeleteUser(UserRepoTestCase):
         self.assertIsNone(refresh_token, msg=f"Recieved refresh token as deleted user. Response headers: {response.headers}")
 
 
-class TestUnauthorizedAccess(UserRepoTestCase):
+class TestUnauthorizedAccess(RepoTestCase):
     def test_unauthorized_get_by_id(self) -> None:
         responses: list[Response] = []
         for id in range(1, 6): # 1 admin + 3 users + 1 inactive user
@@ -152,18 +138,18 @@ class TestUnauthorizedAccess(UserRepoTestCase):
                 pass
 
 
-        def test_unauthorized_delete(self) -> None:
-            responses: list[Response] = []
-            for id in range(1, 6):
-                responses.append(self.delete(path=f"/users/delete/id/{id}", access_token=self.access1))
+    def test_unauthorized_delete(self) -> None:
+        responses: list[Response] = []
+        for id in range(1, 6):
+            responses.append(self.delete(path=f"/users/delete/id/{id}", access_token=self.access1))
 
-            for response in responses:
-                self.assertClientError(response.status_code)
+        for response in responses:
+            self.assertClientError(response.status_code)
 
-            self.login(Login(username="admin", password="admin"))
-            self.login(Login(username="user1", password="password"))
-            self.login(Login(username="user2", password="password"))
-            self.login(Login(username="user3", password="password"))
+        self.login(Login(username="admin", password="admin"))
+        self.login(Login(username="user1", password="password"))
+        self.login(Login(username="user2", password="password"))
+        self.login(Login(username="user3", password="password"))
 
 
 
