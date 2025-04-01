@@ -1,7 +1,6 @@
 """
 Run this file to run the debugger
 """
-import os
 import uvicorn
 import dotenv
 

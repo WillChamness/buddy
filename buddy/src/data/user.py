@@ -1,5 +1,4 @@
 from sqlmodel import Session, select
-from fastapi import HTTPException
 from buddy.src.models import User
 from buddy.src.security import PasswordSecurity
 

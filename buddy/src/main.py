@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from buddy.src import dependencies
 from buddy.src.models import User
-from buddy.src.routers import auth, users
+from buddy.src.routers import auth, budgeting, users
 
 logging.getLogger("passlib").setLevel(logging.ERROR)
 
@@ -28,13 +28,14 @@ app.add_middleware(
 
 @app.middleware("http")
 async def add_csp_header(request: Request, call_next):
+    response = await call_next(request)
+
     inline_docs_script_hash = "sha256-QOOQu4W1oxGqd2nbXbxiA1Di6OHQOLQD+o+G9oWL8YY="  # for the inline script at /docs
     default_src = "default-src 'self';"
     script_src = f"script-src 'self' https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js '{inline_docs_script_hash}';"
     style_src = "style-src 'self' https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css;"
     img_src = "img-src 'self' https://fastapi.tiangolo.com/img/favicon.png;"
 
-    response = await call_next(request)
     response.headers["Content-Security-Policy"] = (
         f"{default_src}{script_src}{style_src}{img_src}"
     )
@@ -43,6 +44,7 @@ async def add_csp_header(request: Request, call_next):
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(budgeting.router)
 
 
 @app.get("/")
