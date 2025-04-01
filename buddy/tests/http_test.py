@@ -1,19 +1,20 @@
 import unittest
 import requests
-import random
 from buddy.tests._env import ServerSettings
 from buddy.dtos import AccessTokenDto, Signup, Login
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 class HttpTestCase(unittest.TestCase):
-    def get(self, *, path: str="", access_token: AccessTokenDto|None=None) -> requests.Response:
+    @classmethod
+    def get(cls, *, path: str="", access_token: AccessTokenDto|None=None) -> requests.Response:
         headers: dict[str, str] = {}
         if access_token is not None:
             headers["Authorization"] = "Bearer " + access_token.access_token
 
         return requests.get(ServerSettings.BASE_URL + path, headers=headers)
 
-    def post(self, *, path: str="", body: BaseModel|None=None, access_token: AccessTokenDto|None=None) -> requests.Response:
+    @classmethod
+    def post(cls, *, path: str="", body: BaseModel|None=None, access_token: AccessTokenDto|None=None) -> requests.Response:
         headers: dict[str, str] = {"Content-Type": "application/json"}
         if access_token is not None:
             headers["Authorization"] = "Bearer " + access_token.access_token
@@ -21,9 +22,10 @@ class HttpTestCase(unittest.TestCase):
         if body is None:
             return requests.post(ServerSettings.BASE_URL + path, headers=headers)
         else:
-            return requests.post(ServerSettings.BASE_URL + path, json=dict(body), headers=headers)
+            return requests.post(ServerSettings.BASE_URL + path, json=body.model_dump(), headers=headers)
 
-    def put(self, *, path: str="", body: BaseModel|None=None, access_token: AccessTokenDto|None=None) -> requests.Response:
+    @classmethod
+    def put(cls, *, path: str="", body: BaseModel|None=None, access_token: AccessTokenDto|None=None) -> requests.Response:
         headers: dict[str, str] = {"Content-Type": "application/json"}
         if access_token is not None:
             headers["Authorization"] = "Bearer " + access_token.access_token
@@ -31,9 +33,10 @@ class HttpTestCase(unittest.TestCase):
         if body is None:
             return requests.put(ServerSettings.BASE_URL + path, headers=headers)
         else:
-            return requests.put(ServerSettings.BASE_URL + path, json=dict(body), headers=headers)
+            return requests.put(ServerSettings.BASE_URL + path, json=body.model_dump(), headers=headers)
 
-    def patch(self, *, path: str="", body: BaseModel|None=None, access_token: AccessTokenDto|None=None) -> requests.Response:
+    @classmethod
+    def patch(cls, *, path: str="", body: BaseModel|None=None, access_token: AccessTokenDto|None=None) -> requests.Response:
         headers: dict[str, str] = {"Content-Type": "application/json"}
         if access_token is not None:
             headers["Authorization"] = "Bearer " + access_token.access_token
@@ -41,9 +44,10 @@ class HttpTestCase(unittest.TestCase):
         if body is None:
             return requests.patch(ServerSettings.BASE_URL + path, headers=headers)
         else:
-            return requests.patch(ServerSettings.BASE_URL + path, json=dict(body), headers=headers)
+            return requests.patch(ServerSettings.BASE_URL + path, json=body.model_dump(), headers=headers)
 
-    def delete(self, *, path: str="", body: BaseModel|None=None, access_token: AccessTokenDto|None=None) -> requests.Response:
+    @classmethod
+    def delete(cls, *, path: str="", body: BaseModel|None=None, access_token: AccessTokenDto|None=None) -> requests.Response:
         headers: dict[str, str] = {"Content-Type": "application/json"}
         if access_token is not None:
             headers["Authorization"] = "Bearer " + access_token.access_token
@@ -51,7 +55,7 @@ class HttpTestCase(unittest.TestCase):
         if body is None:
             return requests.delete(ServerSettings.BASE_URL + path, headers=headers)
         else:
-            return requests.delete(ServerSettings.BASE_URL + path, json=dict(body), headers=headers)
+            return requests.delete(ServerSettings.BASE_URL + path, json=body.model_dump(), headers=headers)
 
     def assertOk(self, status_code: int, msg: str|None=None) -> None:
         if msg is None:
@@ -92,4 +96,19 @@ class HttpTestCase(unittest.TestCase):
         assert refresh_token is not None
 
         return (access_token, refresh_token)
+
+
+
+class RepoTestCase(HttpTestCase):
+    admin_access: AccessTokenDto
+    access1: AccessTokenDto
+    access2: AccessTokenDto
+    access3: AccessTokenDto
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.admin_access, _ = cls.login(Login(username="admin", password="admin"))
+        cls.access1, _ = cls.login(Login(username="user1", password="password"))
+        cls.access2, _ = cls.login(Login(username="user2", password="password"))
+        cls.access3, _ = cls.login(Login(username="user3", password="password"))
 
