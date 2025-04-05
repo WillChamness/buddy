@@ -26,7 +26,7 @@ class BudgetRepoTestCase(RepoTestCase):
 class TestCreateExpense(RepoTestCase):
     def test_create_new(self) -> None:
         send_expense: BudgetExpenseDto = BudgetExpenseDto(expense_type="My Expense", amount=800.0, description=None)
-        response = self.post(path="/budgeting/expenses", body=send_expense, access_token=self.access1)
+        response = self.post(path="/budgeting/expenses/me", body=send_expense, access_token=self.access1)
 
         self.assertOk(response.status_code, msg=f"Server response: {response.json()}")
         try:
@@ -40,8 +40,8 @@ class TestCreateExpense(RepoTestCase):
         expense1 = BudgetExpenseDto(expense_type="Some Expense", amount=100, description="This is quite the expense!")
         expense2 = BudgetExpenseDto(expense_type="Some Expense", amount=100, description="This is quite the expense!!")
 
-        response1 = self.post(path="/budgeting/expenses", body=expense1, access_token=self.access1)
-        response2 = self.post(path="/budgeting/expenses", body=expense2, access_token=self.access2)
+        response1 = self.post(path="/budgeting/expenses/me", body=expense1, access_token=self.access1)
+        response2 = self.post(path="/budgeting/expenses/me", body=expense2, access_token=self.access2)
 
         self.assertOk(response1.status_code)
         self.assertOk(response2.status_code)
@@ -57,8 +57,8 @@ class TestCreateExpense(RepoTestCase):
         expense1 = BudgetExpenseDto(expense_type="Some Expense Again", amount=100, description=None)
         expense2 = BudgetExpenseDto(expense_type="Some Expense Again", amount=200, description="This is my expense")
 
-        response1 = self.post(path="/budgeting/expenses", body=expense1, access_token=self.access1)
-        response2 = self.post(path="/budgeting/expenses", body=expense2, access_token=self.access1)
+        response1 = self.post(path="/budgeting/expenses/me", body=expense1, access_token=self.access1)
+        response2 = self.post(path="/budgeting/expenses/me", body=expense2, access_token=self.access1)
 
         self.assertOk(response1.status_code)
         self.assertClientError(response2.status_code)
@@ -71,7 +71,7 @@ class TestCreateExpense(RepoTestCase):
 
 
     def test_cannot_send_bad_expense_type(self) -> None:
-        response = self.post(path="/budgeting/expenses", body=BudgetExpenseDto(expense_type="", amount=20.1, description=None), access_token=self.access1)
+        response = self.post(path="/budgeting/expenses/me", body=BudgetExpenseDto(expense_type="", amount=20.1, description=None), access_token=self.access1)
         self.assertClientError(response.status_code, msg=f"Server allowed for empty string as expense type")
 
         try:
@@ -84,8 +84,8 @@ class TestCreateExpense(RepoTestCase):
     def test_expense_type_case_insensitive(self) -> None:
         expense1 = BudgetExpenseDto(expense_type="Some Expense Yet Again", amount=100, description=None)
         expense2 = BudgetExpenseDto(expense_type="some expense yet again", amount=200, description=None)
-        response1 = self.post(path="/budgeting/expenses", body=expense1, access_token=self.access1)
-        response2 = self.post(path="/budgeting/expenses", body=expense2, access_token=self.access1)
+        response1 = self.post(path="/budgeting/expenses/me", body=expense1, access_token=self.access1)
+        response2 = self.post(path="/budgeting/expenses/me", body=expense2, access_token=self.access1)
 
         self.assertOk(response1.status_code)
         self.assertClientError(response2.status_code)
@@ -169,7 +169,7 @@ class TestReadExpenses(BudgetRepoTestCase):
 
 class TestDeleteExpense(BudgetRepoTestCase):
     def test_delete(self) -> None:
-        self.post(path="/budgeting/expenses", body=BudgetExpenseDto(expense_type="deleteme", amount=12.9, description="Delete Me"),
+        self.post(path="/budgeting/expenses/me", body=BudgetExpenseDto(expense_type="deleteme", amount=12.9, description="Delete Me"),
                   access_token=self.access1)
 
         response: Response = self.delete(path="/budgeting/expenses/me/deleteme", access_token=self.access1)

@@ -51,7 +51,7 @@ def delete_user_income_by_type():
     raise NotImplementedError()
 
 
-@router.post("/expenses", status_code=status.HTTP_201_CREATED)
+@router.post("/expenses/me", status_code=status.HTTP_201_CREATED)
 def add_expense(
     monthly_expense: BudgetExpenseDto,
     db: Session = Depends(dependencies.session),

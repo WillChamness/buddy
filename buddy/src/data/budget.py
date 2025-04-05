@@ -74,6 +74,9 @@ class BudgetExpenseRepository:
 
     @classmethod
     def get_expenses(cls, user: User, db: Session) -> Iterable[BudgetExpense]:
+        """
+
+        """
         expenses: Iterable[BudgetExpense] = db.exec(
             select(BudgetExpense).where(BudgetExpense.user_id == user.id)
         ).all()
@@ -83,6 +86,9 @@ class BudgetExpenseRepository:
     def get_expenses_by_user_id(
         cls, user_id: int, db: Session
     ) -> Iterable[BudgetExpense]:
+        """
+
+        """
         expenses: Iterable[BudgetExpense] = db.exec(
             select(BudgetExpense).where(BudgetExpense.user_id == user_id)
         ).all()
@@ -92,6 +98,9 @@ class BudgetExpenseRepository:
     def get_expenses_by_type(
         cls, expense_type: str, db: Session
     ) -> Iterable[BudgetExpense]:
+        """
+
+        """
         standardized_expense_type: str = cls._standardize_expense_type(expense_type)
         expenses: Iterable[BudgetExpense] = db.exec(
             select(BudgetExpense).where(
