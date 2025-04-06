@@ -94,7 +94,11 @@ class IdentitySecurity:
         id: int
         exp: datetime
 
-    _expiry_delta: timedelta = timedelta(minutes=10)
+    _expiry_delta: timedelta = (
+        timedelta(minutes=10)
+        if os.getenv("APPLICATION_ENV") == "prod"
+        else timedelta(hours=1)
+    )
     _algorithm: str = "HS256"
     _jwt_secret_key: str | None = os.getenv("JWT_SECRET_KEY")
 

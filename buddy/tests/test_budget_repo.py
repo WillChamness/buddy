@@ -1,10 +1,8 @@
 import random
 from pydantic import ValidationError
-import requests
 from requests import Response
-from buddy.dtos.user import UserDto
+from buddy.dtos import BudgetExpenseDto, NewBudgetExpense, UserDto
 from buddy.tests.http_test import RepoTestCase
-from buddy.tests._env import ServerSettings
 from buddy.dtos import BudgetExpenseDto
 
 
@@ -12,10 +10,10 @@ class BudgetRepoTestCase(RepoTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        exp1 = BudgetExpenseDto(expense_type=f"Expense #{random.randint(1, 10**9)}", amount=100, description=None)
-        exp2 = BudgetExpenseDto(expense_type=f"Expense #{random.randint(1, 10**9)}", amount=100, description=None)
-        exp3 = BudgetExpenseDto(expense_type=f"Expense #{random.randint(1, 10**9)}", amount=100, description=None)
-        exp4 = BudgetExpenseDto(expense_type=f"Expense #{random.randint(1, 10**9)}", amount=200, description=None)
+        exp1 = NewBudgetExpense(expense_type=f"Expense #{random.randint(1, 10**9)}", amount=100, description=None)
+        exp2 = NewBudgetExpense(expense_type=f"Expense #{random.randint(1, 10**9)}", amount=100, description=None)
+        exp3 = NewBudgetExpense(expense_type=f"Expense #{random.randint(1, 10**9)}", amount=100, description=None)
+        exp4 = NewBudgetExpense(expense_type=f"Expense #{random.randint(1, 10**9)}", amount=200, description=None)
 
         cls.post(path="/budgeting/expenses", body=exp1, access_token=cls.access1)
         cls.post(path="/budgeting/expenses", body=exp2, access_token=cls.access1)
@@ -25,7 +23,7 @@ class BudgetRepoTestCase(RepoTestCase):
 
 class TestCreateExpense(RepoTestCase):
     def test_create_new(self) -> None:
-        send_expense: BudgetExpenseDto = BudgetExpenseDto(expense_type="My Expense", amount=800.0, description=None)
+        send_expense = NewBudgetExpense(expense_type="My Expense", amount=800.0, description=None)
         response = self.post(path="/budgeting/expenses/me", body=send_expense, access_token=self.access1)
 
         self.assertOk(response.status_code, msg=f"Server response: {response.json()}")
@@ -34,11 +32,11 @@ class TestCreateExpense(RepoTestCase):
         except ValidationError:
             self.fail(f"Did not recieve an expense after creating a new one. Server response: {response.json()}")
         
-        self.assertEqual(send_expense, recv_expense, msg=f"Sent and received expenses not the same. Sent: {send_expense}; received: {recv_expense}")
+        self.assertEqual(send_expense.expense_type, recv_expense.expense_type)
 
     def test_different_users_create_same_expense(self) -> None:
-        expense1 = BudgetExpenseDto(expense_type="Some Expense", amount=100, description="This is quite the expense!")
-        expense2 = BudgetExpenseDto(expense_type="Some Expense", amount=100, description="This is quite the expense!!")
+        expense1 = NewBudgetExpense(expense_type="Some Expense", amount=100, description="This is quite the expense!")
+        expense2 = NewBudgetExpense(expense_type="Some Expense", amount=100, description="This is quite the expense!!")
 
         response1 = self.post(path="/budgeting/expenses/me", body=expense1, access_token=self.access1)
         response2 = self.post(path="/budgeting/expenses/me", body=expense2, access_token=self.access2)
@@ -54,8 +52,8 @@ class TestCreateExpense(RepoTestCase):
 
 
     def test_user_cannot_create_same_expense(self) -> None:
-        expense1 = BudgetExpenseDto(expense_type="Some Expense Again", amount=100, description=None)
-        expense2 = BudgetExpenseDto(expense_type="Some Expense Again", amount=200, description="This is my expense")
+        expense1 = NewBudgetExpense(expense_type="Some Expense Again", amount=100, description=None)
+        expense2 = NewBudgetExpense(expense_type="Some Expense Again", amount=200, description="This is my expense")
 
         response1 = self.post(path="/budgeting/expenses/me", body=expense1, access_token=self.access1)
         response2 = self.post(path="/budgeting/expenses/me", body=expense2, access_token=self.access1)
@@ -71,7 +69,7 @@ class TestCreateExpense(RepoTestCase):
 
 
     def test_cannot_send_bad_expense_type(self) -> None:
-        response = self.post(path="/budgeting/expenses/me", body=BudgetExpenseDto(expense_type="", amount=20.1, description=None), access_token=self.access1)
+        response = self.post(path="/budgeting/expenses/me", body=NewBudgetExpense(expense_type="", amount=20.1, description=None), access_token=self.access1)
         self.assertClientError(response.status_code, msg=f"Server allowed for empty string as expense type")
 
         try:
@@ -82,8 +80,8 @@ class TestCreateExpense(RepoTestCase):
 
 
     def test_expense_type_case_insensitive(self) -> None:
-        expense1 = BudgetExpenseDto(expense_type="Some Expense Yet Again", amount=100, description=None)
-        expense2 = BudgetExpenseDto(expense_type="some expense yet again", amount=200, description=None)
+        expense1 = NewBudgetExpense(expense_type="Some Expense Yet Again", amount=100, description=None)
+        expense2 = NewBudgetExpense(expense_type="some expense yet again", amount=200, description=None)
         response1 = self.post(path="/budgeting/expenses/me", body=expense1, access_token=self.access1)
         response2 = self.post(path="/budgeting/expenses/me", body=expense2, access_token=self.access1)
 
@@ -142,11 +140,11 @@ class TestReadExpenses(BudgetRepoTestCase):
 
 
     def test_get_by_expense_type(self) -> None:
-        self.post(path="/budgeting/expenses", body=BudgetExpenseDto(expense_type="Rent", amount=1500, description="Montly apartment rent"), 
+        self.post(path="/budgeting/expenses", body=NewBudgetExpense(expense_type="Apartment Rent", amount=1500, description="Montly apartment rent"), 
                   access_token=self.access1)
-        self.post(path="/budgeting/expenses", body=BudgetExpenseDto(expense_type="Rent", amount=1300, description="Montly apartment rent"), 
+        self.post(path="/budgeting/expenses", body=NewBudgetExpense(expense_type="Monthly Rent", amount=1300, description="Montly apartment rent"), 
                   access_token=self.access2)
-        self.post(path="/budgeting/expenses", body=BudgetExpenseDto(expense_type="Rent", amount=1900, description="Montly apartment rent"), 
+        self.post(path="/budgeting/expenses", body=NewBudgetExpense(expense_type="My Monthly Apartment Rent", amount=1900, description="Montly apartment rent"), 
                   access_token=self.access3)
 
         
@@ -169,7 +167,7 @@ class TestReadExpenses(BudgetRepoTestCase):
 
 class TestDeleteExpense(BudgetRepoTestCase):
     def test_delete(self) -> None:
-        self.post(path="/budgeting/expenses/me", body=BudgetExpenseDto(expense_type="deleteme", amount=12.9, description="Delete Me"),
+        self.post(path="/budgeting/expenses/me", body=NewBudgetExpense(expense_type="deleteme", amount=12.9, description="Delete Me"),
                   access_token=self.access1)
 
         response: Response = self.delete(path="/budgeting/expenses/me/deleteme", access_token=self.access1)

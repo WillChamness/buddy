@@ -1,4 +1,7 @@
 import logging
+
+logging.getLogger("passlib").setLevel(logging.ERROR)
+
 import os
 
 from fastapi import Depends, FastAPI, Request
@@ -7,8 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from buddy.src import dependencies
 from buddy.src.models import User
 from buddy.src.routers import auth, budgeting, users
-
-logging.getLogger("passlib").setLevel(logging.ERROR)
 
 app = FastAPI()
 

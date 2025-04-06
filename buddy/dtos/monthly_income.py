@@ -3,13 +3,12 @@ from pydantic import BaseModel
 from pydantic.functional_serializers import PlainSerializer
 from decimal import Decimal
 
-class BudgetExpenseDto(BaseModel):
-    expense_type: str
+class MonthlyIncomeDto(BaseModel):
+    income_type: str
     amount: float|Annotated[Decimal, PlainSerializer(lambda amt : str(amt), return_type=str, when_used="json")] 
-    description: str|None
     user_id: int
 
-class NewBudgetExpense(BaseModel):
-    expense_type: str
+class NewMonthlyIncome(BaseModel):
+    income_type: str
     amount: float|Annotated[Decimal, PlainSerializer(lambda amt : str(amt), return_type=str, when_used="json")] 
-    description: str|None
+

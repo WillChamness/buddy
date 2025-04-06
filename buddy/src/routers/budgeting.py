@@ -4,56 +4,92 @@ from typing import Iterable
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
-from buddy.dtos import BudgetExpenseDto
+from buddy.dtos import BudgetExpenseDto, MonthlyIncomeDto, NewBudgetExpense, NewMonthlyIncome
 from buddy.src import dependencies
-from buddy.src.data import BudgetExpenseRepository
-from buddy.src.models import BudgetExpense, User
+from buddy.src.data import BudgetExpenseRepository, MonthlyIncomeRepository
+from buddy.src.models import BudgetExpense, MonthlyIncome, User
 
 router = APIRouter(prefix="/budgeting", tags=["budgeting"])
 
 
-@router.post("/income")
-def add_income_source():
-    raise NotImplementedError()
-
-
-@router.get("/income/me")
-def get_income(
-    self,
+@router.post("/income/me", status_code=status.HTTP_201_CREATED)
+def add_income_source(
+    monthly_income: NewMonthlyIncome,
     user: User = Depends(dependencies.get_user_or_admin),
     db: Session = Depends(dependencies.session),
-):
-    raise NotImplementedError()
+) -> MonthlyIncomeDto:
+    try:
+        income: MonthlyIncome | None = MonthlyIncomeRepository.create(
+            user, monthly_income.income_type, Decimal(monthly_income.amount), db
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        )
+
+    if income is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"You already have income source '{monthly_income.income_type}'",
+        )
+
+    return MonthlyIncomeDto(income_type=income.income_type, amount=income.amount, user_id=income.user_id)
 
 
-@router.delete("/income/me/{income_type}")
+@router.get("/income/me", status_code=status.HTTP_200_OK)
+def get_income(
+    user: User = Depends(dependencies.get_user_or_admin),
+    db: Session = Depends(dependencies.session),
+) -> Iterable[MonthlyIncomeDto]:
+    income_sources: Iterable[MonthlyIncome] = MonthlyIncomeRepository.get_all(user, db)
+    for income in income_sources:
+        yield MonthlyIncomeDto(income_type=income.income_type, amount=income.amount, user_id=income.user_id)
+
+
+@router.delete("/income/me/{income_type}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_income(
-    self,
     income_type: str,
     user: User = Depends(dependencies.get_user_or_admin),
     db: Session = Depends(dependencies.session),
+) -> None:
+    found_and_deleted: bool = MonthlyIncomeRepository.delete(user, income_type, db)
+    if not found_and_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Could not find income '{income_type}'",
+        )
+
+
+@router.get("/income/user/{user_id}", status_code=status.HTTP_200_OK)
+def get_user_income(
+    user_id: int,
+    db: Session = Depends(dependencies.session),
+    _: User = Depends(dependencies.get_admin),
+) -> Iterable[MonthlyIncomeDto]:
+    income_sources: Iterable[MonthlyIncome] = MonthlyIncomeRepository.get_by_user_id(
+        user_id, db
+    )
+    for income in income_sources:
+        yield MonthlyIncomeDto(income_type=income.income_type, amount=income.amount, user_id=income.user_id)
+
+
+@router.get("/income/type/{income_type}", status_code=status.HTTP_200_OK)
+def get_income_by_type(
+    income_type: str,
+    db: Session = Depends(dependencies.session),
+    _: User = Depends(dependencies.get_admin),
 ):
-    raise NotImplementedError()
-
-
-@router.get("/income/user/{user_id}")
-def get_user_income():
-    raise NotImplementedError()
-
-
-@router.get("/income/type/{income_type}")
-def get_income_by_type():
-    raise NotImplementedError()
-
-
-@router.delete("/income/type/{income_type}")
-def delete_user_income_by_type():
-    raise NotImplementedError()
+    income_sources: Iterable[MonthlyIncome] = MonthlyIncomeRepository.get_by_type(
+        income_type, db
+    )
+    for income in income_sources:
+        yield MonthlyIncomeDto(income_type=income.income_type, amount=income.amount, user_id=income.user_id)
 
 
 @router.post("/expenses/me", status_code=status.HTTP_201_CREATED)
 def add_expense(
-    monthly_expense: BudgetExpenseDto,
+    monthly_expense: NewBudgetExpense,
     db: Session = Depends(dependencies.session),
     user: User = Depends(dependencies.get_user_or_admin),
 ) -> BudgetExpenseDto:
@@ -65,10 +101,10 @@ def add_expense(
             user,
             db,
         )
-    except ValueError:
+    except ValueError as error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Your expense type is an empty string or contains bad whitespace",
+            detail=str(error),
         )
 
     if expense is None:
@@ -81,6 +117,7 @@ def add_expense(
         expense_type=expense.expense_type,
         amount=expense.amount,
         description=expense.description,
+        user_id=expense.user_id
     )
 
 
@@ -96,6 +133,7 @@ def get_expenses(
             expense_type=expense.expense_type,
             amount=expense.amount,
             description=expense.description,
+            user_id=expense.user_id
         )
 
 
@@ -129,6 +167,7 @@ def get_expenses_by_user_id(
             expense_type=expense.expense_type,
             amount=expense.amount,
             description=expense.description,
+            user_id=expense.user_id
         )
 
 
@@ -147,4 +186,5 @@ def get_expenses_by_type(
             expense_type=expense.expense_type,
             amount=expense.amount,
             description=expense.description,
+            user_id=expense.user_id
         )
