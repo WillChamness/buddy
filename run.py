@@ -1,11 +1,9 @@
 """
-Run this file to run the debugger
+Run dev
 """
-import uvicorn
-import dotenv
-
-dotenv.load_dotenv(dotenv_path="./development.env")
-
-from buddy.src.main import app
-uvicorn.run(app)
+if __name__ == "__main__":
+    import uvicorn
+    import dotenv
+    dotenv.load_dotenv(dotenv_path="./development.env")
+    uvicorn.run("buddy.src.main:app", reload=True)
 
