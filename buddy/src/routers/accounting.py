@@ -194,7 +194,7 @@ def delete_expense(
     if not found_and_deleted:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
-            f"Could not find expense '{DeleteAccountingExpense.expense_type}'",
+            f"Could not find expense '{delete_accounting_income.expense_type}'",
         )
 
 

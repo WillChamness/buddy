@@ -56,12 +56,22 @@ def create(
         .where(AccountingExpense.expense_type == standardized_expense_type)
     ).first()
 
+    existing_expense2: AccountingExpense | None = db.exec(
+        select(AccountingExpense)
+        .where(AccountingExpense.user_id == user.id)
+        .where(AccountingExpense.expense_type == standardized_expense_type)
+    ).first()
+
+    if existing_expense2 is not None:
+        x = existing_expense2.date == date
+
     if existing_expense is not None:
         return None
 
     expense: AccountingExpense = AccountingExpense(
         expense_type=standardized_expense_type,
         amount=amount,
+        date=date,
         user_id=user.id,
         description=description,
     )
