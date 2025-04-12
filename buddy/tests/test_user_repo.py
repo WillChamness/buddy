@@ -14,7 +14,7 @@ class TestGetUser(RepoTestCase):
         for response in responses:
             self.assertOk(response.status_code)
             try:
-                user: UserDto = UserDto.model_validate(response.json())
+                UserDto.model_validate(response.json())
             except ValidationError:
                 self.fail(f"User could not get their own profile. Server response: {response.json()}")
 
@@ -27,7 +27,7 @@ class TestGetUser(RepoTestCase):
         for response in responses:
             self.assertOk(response.status_code)
             try:
-                user: UserDto = UserDto.model_validate(response.json())
+                UserDto.model_validate(response.json())
             except ValidationError:
                 self.fail(f"Could not get user by ID as admin. Server response: {response.json()}")
 
@@ -40,7 +40,7 @@ class TestGetUser(RepoTestCase):
         for response in responses:
             self.assertOk(response.status_code)
             try:
-                user: UserDto = UserDto.model_validate(response.json())
+                UserDto.model_validate(response.json())
             except ValidationError:
                 self.fail(f"Could not get user by username as admin. Server response: {response.json()}")
 
@@ -48,18 +48,18 @@ class TestGetUser(RepoTestCase):
     def test_cannot_find_user(self) -> None:
         response: Response = self.get(path=f"/users/id/0", access_token=self.admin_access)
 
-        self.assertClientError(response.status_code)
+        self.assertNotFound(response.status_code)
         try:
-            user: UserDto = UserDto.model_validate(response.json())
+            UserDto.model_validate(response.json())
             self.fail(f"Got user that doesn't exist from the server. Server response: {response.json()}")
         except ValidationError:
             pass
 
         response = self.get(path=f"/users/username/doesnotexist", access_token=self.admin_access)
 
-        self.assertClientError(response.status_code)
+        self.assertNotFound(response.status_code)
         try:
-            user = UserDto.model_validate(response.json())
+            UserDto.model_validate(response.json())
             self.fail(f"Got user that doesn't exist from the server. Server response: {response.json()}")
         except ValidationError:
             pass
@@ -78,7 +78,7 @@ class TestDeleteUser(RepoTestCase):
         response = requests.post(ServerSettings.BASE_URL+"/token", headers=headers, data=f"username={credentials.username}&password={credentials.password}")
         self.assertClientError(response.status_code)
         try:
-            access_token: AccessTokenDto = AccessTokenDto.model_validate(response.json())
+            AccessTokenDto.model_validate(response.json())
             self.fail(f"Received access token as deleted user. Server response: {response.json()}")
         except ValidationError:
             pass
@@ -100,7 +100,7 @@ class TestDeleteUser(RepoTestCase):
         response = requests.post(ServerSettings.BASE_URL+"/token", headers=headers, data=f"username={credentials.username}&password={credentials.password}")
         self.assertClientError(response.status_code)
         try:
-            access_token: AccessTokenDto = AccessTokenDto.model_validate(response.json())
+            AccessTokenDto.model_validate(response.json())
             self.fail(f"Received access token as deleted user. Server response: {response.json()}")
         except ValidationError:
             pass
@@ -118,7 +118,7 @@ class TestUnauthorizedAccess(RepoTestCase):
         for response in responses:
             self.assertClientError(response.status_code)
             try:
-                user: UserDto = UserDto.model_validate(response.json())
+                UserDto.model_validate(response.json())
                 self.fail(f"Accessed user by ID as non-admin. Server response: {response.json()}")
             except ValidationError:
                 pass
@@ -132,7 +132,7 @@ class TestUnauthorizedAccess(RepoTestCase):
         for response in responses:
             self.assertClientError(response.status_code)
             try:
-                user: UserDto = UserDto.model_validate(response.json())
+                UserDto.model_validate(response.json())
                 self.fail(f"Accessed user by username as non-admin. Server response: {response.json()}")
             except ValidationError:
                 pass

@@ -49,7 +49,7 @@ class BudgetExpenseRepository:
         assert user.id is not None
 
         if expense_type == "" or "\t" in expense_type or "\n" in expense_type:
-            raise ValueError("Expense type is empty or contains invalid whitespace")
+            raise ValueError("Expense Type is invalid")
         standardized_expense_type: str = cls._standardize_expense_type(expense_type)
 
         existing_expense: BudgetExpense | None = db.exec(
@@ -165,7 +165,7 @@ class MonthlyIncomeRepository:
         standardized: str = ""
         for word in income_type.split(" "):
             if word == "":
-                raise ValueError("Expense type contains too much whitespace")
+                raise ValueError("Income Type contains too much whitespace")
 
             standardized += f"{word[0].upper()}{word[1:].lower()} "
 
@@ -179,7 +179,7 @@ class MonthlyIncomeRepository:
         assert user.id is not None
 
         if income_type == "" or "\t" in income_type or "\n" in income_type:
-            raise ValueError("Expense type is empty or contains invalid whitespace")
+            raise ValueError("Income Type is invalid")
         standardized_income_type: str = cls._standardize_income_type(income_type)
 
         existing_income_source: MonthlyIncome | None = db.exec(

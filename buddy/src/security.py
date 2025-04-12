@@ -160,7 +160,7 @@ class IdentitySecurity:
             db (Session): The database session
 
         Returns:
-            RefreshToken|None: The refresh token, if it exists and isn't expired; otherwise None
+            RefreshToken|None: The refresh token if it exists and isn't expired; otherwise None
         """
         if token is None:
             return None

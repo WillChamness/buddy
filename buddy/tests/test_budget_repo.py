@@ -176,7 +176,7 @@ class TestDeleteExpense(BudgetRepoTestCase):
 
     def test_delete_nonexistant_expense(self) -> None:
         response = self.delete(path="/budgeting/expenses/me/doesnotexist", access_token=self.access1)
-        self.assertClientError(response.status_code)
+        self.assertNotFound(response.status_code)
 
 
 

@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from buddy.src import dependencies
 from buddy.src.models import User
-from buddy.src.routers import auth, budgeting, users
+from buddy.src.routers import auth, users, budgeting, accounting
 
 app = FastAPI()
 
@@ -46,6 +46,7 @@ async def add_csp_header(request: Request, call_next):
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(budgeting.router)
+app.include_router(accounting.router)
 
 
 @app.get("/")

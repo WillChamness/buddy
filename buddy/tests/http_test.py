@@ -64,8 +64,13 @@ class HttpTestCase(unittest.TestCase):
 
     def assertClientError(self, status_code: int, msg: str|None=None) -> None:
         if msg is None:
-            f"{status_code} is not a client error status code"
-        self.assertTrue(400 <= status_code and status_code <= 499, msg=msg)
+            msg = f"{status_code} is not a client error status code or is 404 Not Found"
+        self.assertTrue(400 <= status_code and status_code <= 499 and status_code != 404, msg=msg)
+
+    def assertNotFound(self, status_code: int, msg: str|None=None) -> None:
+        if msg is None:
+            msg = f"{status_code} is not 404"
+        self.assertTrue(status_code == 404, msg=msg)
 
     def assertServerError(self, status_code: int, msg: str|None=None) -> None:
         if msg is None:
